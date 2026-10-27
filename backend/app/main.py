@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.routers import auth
 
 app = FastAPI(title="Secure Auth API")
 
@@ -18,3 +19,5 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+app.include_router(auth.router)
