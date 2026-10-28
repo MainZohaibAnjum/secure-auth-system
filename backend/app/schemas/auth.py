@@ -27,3 +27,25 @@ class UserResponse(BaseModel):
     totp_enabled: bool
     created_at: datetime
 
+
+
+
+class LoginRequest(BaseModel):
+    """What the client must send to log in."""
+
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def lowercase_email(cls, value: str) -> str:
+        return value.lower()
+
+
+class TokenResponse(BaseModel):
+    """What we send back after a successful login."""
+
+    access_token: str
+    token_type: str = "bearer"
+
+

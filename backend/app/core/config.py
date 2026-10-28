@@ -17,6 +17,14 @@ class Settings(BaseSettings):
 
     # The website address allowed to call this API
     frontend_origin: str
+    
+    # JWT (login tokens)
+    jwt_secret_key: str
+    jwt_algorithm: str
+    jwt_issuer: str
+    jwt_audience: str
+    access_token_expire_minutes: int
+
 
     @property
     def database_url(self) -> str:
