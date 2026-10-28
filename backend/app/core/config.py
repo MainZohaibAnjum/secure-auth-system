@@ -29,7 +29,9 @@ class Settings(BaseSettings):
     max_failed_login_attempts: int
     account_lockout_minutes: int
 
-
+    # Refresh tokens (stay logged in)
+    refresh_token_expire_days: int
+    cookie_secure: bool
 
     @property
     def database_url(self) -> str:
@@ -42,3 +44,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

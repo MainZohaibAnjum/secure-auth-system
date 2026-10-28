@@ -1,3 +1,7 @@
+import hashlib
+import secrets
+
+
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -64,3 +68,18 @@ def decode_access_token(token: str) -> dict:
     if payload.get("typ") != "access":
         raise jwt.InvalidTokenError("Wrong token type")
     return payload
+
+
+
+# ---------- Refresh tokens ----------
+
+
+def generate_refresh_token() -> str:
+    """A long random string (256 bits). Unguessable, and it means nothing by itself."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(token: str) -> str:
+    """SHA-256 of a refresh token, which is what we store in the database."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
