@@ -1,5 +1,7 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -7,7 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import (
+    create_2fa_challenge_token,
     create_access_token,
+    decode_2fa_challenge_token,
     hash_password,
     password_needs_rehash,
     verify_password,
@@ -15,13 +19,21 @@ from app.core.security import (
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models import User
-from app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserResponse
+from app.schemas.auth import (
+    LoginRequest,
+    LoginResponse,
+    SignupRequest,
+    TokenResponse,
+    TwoFactorVerifyRequest,
+    UserResponse,
+)
 from app.services.refresh_sessions import (
     InvalidRefreshToken,
     create_refresh_session,
     revoke_refresh_session,
     rotate_refresh_session,
 )
+from app.services.totp import verify_totp_code
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -55,13 +67,13 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)) -> User:
     return user
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=LoginResponse)
 def login(
     data: LoginRequest,
     request: Request,
     response: Response,
     db: Session = Depends(get_db),
-) -> TokenResponse:
+) -> LoginResponse:
     # 1. Find the user by email
     user = db.scalar(select(User).where(User.email == data.email))
 
@@ -71,7 +83,7 @@ def login(
 
     # 3. Is the account currently locked from too many wrong passwords?
     now = datetime.now(timezone.utc)
-    locked = user is not None and user.locked_until is not None and user.locked_until > now
+    locked = user is not None and _is_locked(user, now)
 
     # 4. One message for every failure, so attackers can't tell which part was wrong
     if user is None or locked or not password_ok or not user.is_active:
@@ -84,22 +96,50 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 5. Success: clear the failure counter and any old lock
-    user.failed_login_count = 0
-    user.locked_until = None
-
-    # 6. If the hash uses older settings, quietly upgrade it now that we know the password
+    # 5. If the hash uses older settings, quietly upgrade it now that we know the password
     if password_needs_rehash(user.password_hash):
         user.password_hash = hash_password(data.password)
 
-    # 7. Start a refresh session (keeps the user logged in) and save everything
-    refresh_token, _ = create_refresh_session(
-        db, user.id, request.headers.get("user-agent"), _client_ip(request)
-    )
-    db.commit()
+    # 6. 2FA is on: the password alone isn't enough. Hand out a short-lived challenge
+    #    instead. The failure counter is NOT reset yet, so wrong codes still count.
+    if user.totp_enabled:
+        db.commit()
+        return LoginResponse(
+            requires_2fa=True, challenge_token=create_2fa_challenge_token(user.id)
+        )
 
-    _set_refresh_cookie(response, refresh_token)
-    return TokenResponse(access_token=create_access_token(user.id))
+    # 7. No 2FA: the user is fully logged in
+    return _complete_login(db, user, request, response)
+
+
+@router.post("/2fa/verify", response_model=LoginResponse)
+def verify_2fa(
+    data: TwoFactorVerifyRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> LoginResponse:
+    """Second login step: swap the challenge token + a 6-digit code for real tokens."""
+    unauthorized = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired code")
+
+    # 1. The challenge token proves the password step passed (in the last few minutes)
+    try:
+        payload = decode_2fa_challenge_token(data.challenge_token)
+        user = db.get(User, uuid.UUID(payload["sub"]))
+    except (jwt.InvalidTokenError, ValueError):
+        raise unauthorized
+
+    now = datetime.now(timezone.utc)
+    if user is None or not user.is_active or not user.totp_enabled or _is_locked(user, now):
+        raise unauthorized
+
+    # 2. Wrong codes count toward the same lockout as wrong passwords
+    if not verify_totp_code(user, data.code):
+        _record_failed_login(user, now)
+        db.commit()
+        raise unauthorized
+
+    return _complete_login(db, user, request, response)
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -151,8 +191,28 @@ def me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
+def _complete_login(
+    db: Session, user: User, request: Request, response: Response
+) -> LoginResponse:
+    """Every check passed: reset the failure counter, start a session, hand out tokens."""
+    user.failed_login_count = 0
+    user.locked_until = None
+
+    refresh_token, _ = create_refresh_session(
+        db, user.id, request.headers.get("user-agent"), _client_ip(request)
+    )
+    db.commit()
+
+    _set_refresh_cookie(response, refresh_token)
+    return LoginResponse(access_token=create_access_token(user.id))
+
+
+def _is_locked(user: User, now: datetime) -> bool:
+    return user.locked_until is not None and user.locked_until > now
+
+
 def _record_failed_login(user: User, now: datetime) -> None:
-    """Count a wrong password; lock the account once the limit is reached."""
+    """Count a wrong password or code; lock the account once the limit is reached."""
     user.failed_login_count += 1
     if user.failed_login_count >= settings.max_failed_login_attempts:
         user.locked_until = now + timedelta(minutes=settings.account_lockout_minutes)

@@ -49,3 +49,38 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+
+
+class LoginResponse(BaseModel):
+    """Login answer: either an access token, or "now send your 2FA code"."""
+
+    access_token: str | None = None
+    token_type: str = "bearer"
+    requires_2fa: bool = False
+    challenge_token: str | None = None
+
+
+class TwoFactorCodeRequest(BaseModel):
+    """A 6-digit code from the authenticator app."""
+
+    code: str = Field(pattern=r"^\d{6}$")
+
+
+class TwoFactorVerifyRequest(TwoFactorCodeRequest):
+    """Second login step: the challenge token from /login plus the 6-digit code."""
+
+    challenge_token: str
+
+
+class TwoFactorDisableRequest(TwoFactorCodeRequest):
+    """Turning 2FA off needs both the password and a current code."""
+
+    password: str = Field(min_length=1, max_length=128)
+
+
+class TwoFactorSetupResponse(BaseModel):
+    """Everything needed to add this account to an authenticator app."""
+
+    secret: str
+    otpauth_uri: str
+    qr_code_data_uri: str
