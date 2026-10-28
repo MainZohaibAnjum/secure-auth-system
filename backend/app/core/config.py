@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     jwt_issuer: str
     jwt_audience: str
     access_token_expire_minutes: int
+    
+    # Brute-force protection
+    max_failed_login_attempts: int
+    account_lockout_minutes: int
+
 
 
     @property
