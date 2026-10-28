@@ -10,6 +10,7 @@ from app.core.security import (
     verify_password,
 )
 from app.db.session import get_db
+from app.dependencies.auth import get_current_user
 from app.models import User
 from app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserResponse
 
@@ -65,3 +66,11 @@ def login(data: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
 
     # 5. Success: hand out a signed token
     return TokenResponse(access_token=create_access_token(user.id))
+
+
+
+
+@router.get("/me", response_model=UserResponse)
+def me(current_user: User = Depends(get_current_user)) -> User:
+    """Return the logged-in user. Only works with a valid access token."""
+    return current_user
