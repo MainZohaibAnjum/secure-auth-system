@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.core.security import encrypt_secret, verify_password
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
@@ -61,8 +63,10 @@ def enable(
 
 
 @router.post("/disable", response_model=UserResponse)
+@limiter.limit(settings.rate_limit_login)
 def disable(
     data: TwoFactorDisableRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> User:

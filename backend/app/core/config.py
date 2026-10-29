@@ -32,15 +32,17 @@ class Settings(BaseSettings):
     # Refresh tokens (stay logged in)
     refresh_token_expire_days: int
     cookie_secure: bool
-    
-    
-    
-    
+
     # Two-factor authentication (2FA)
     totp_encryption_key: str
     totp_issuer_name: str
     two_fa_challenge_expire_minutes: int
 
+    # Rate limiting (max requests per IP address)
+    rate_limit_storage_uri: str
+    rate_limit_login: str
+    rate_limit_signup: str
+    rate_limit_refresh: str
 
     @property
     def database_url(self) -> str:

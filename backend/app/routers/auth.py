@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.core.security import (
     create_2fa_challenge_token,
     create_access_token,
@@ -46,7 +47,9 @@ REFRESH_COOKIE_PATH = "/auth"
 
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def signup(data: SignupRequest, db: Session = Depends(get_db)) -> User:
+@limiter.limit(settings.rate_limit_signup)
+def signup(data: SignupRequest, request: Request, db: Session = Depends(get_db)) -> User:
+
     # 1. Is this email already taken?
     existing = db.scalar(select(User).where(User.email == data.email))
     if existing is not None:
@@ -68,6 +71,7 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)) -> User:
 
 
 @router.post("/login", response_model=LoginResponse)
+@limiter.limit(settings.rate_limit_login)
 def login(
     data: LoginRequest,
     request: Request,
@@ -113,6 +117,7 @@ def login(
 
 
 @router.post("/2fa/verify", response_model=LoginResponse)
+@limiter.limit(settings.rate_limit_login)
 def verify_2fa(
     data: TwoFactorVerifyRequest,
     request: Request,
@@ -143,6 +148,7 @@ def verify_2fa(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit(settings.rate_limit_refresh)
 def refresh(request: Request, response: Response, db: Session = Depends(get_db)) -> TokenResponse:
     """Swap the refresh cookie for a new access token (and a new refresh cookie)."""
     unauthorized = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
