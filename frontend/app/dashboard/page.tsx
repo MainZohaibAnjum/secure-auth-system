@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { SessionsPanel } from "@/components/sessions-panel";
 import { TwoFactorPanel } from "@/components/two-factor-panel";
 import { Button, Card, Loading } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -34,6 +35,8 @@ export default function DashboardPage() {
       </dl>
 
       <TwoFactorPanel />
+            <SessionsPanel />
+
 
       <div className="mt-6">
         <Button variant="secondary" onClick={() => logout()}>

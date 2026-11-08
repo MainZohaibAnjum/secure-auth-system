@@ -84,3 +84,18 @@ class TwoFactorSetupResponse(BaseModel):
     secret: str
     otpauth_uri: str
     qr_code_data_uri: str
+
+
+class SessionResponse(BaseModel):
+    """One logged-in device, for the "your devices" list."""
+
+    id: uuid.UUID  # the login family: stays the same while the token rotates
+    user_agent: str | None
+    ip: str | None
+    signed_in_at: datetime
+    last_active_at: datetime
+    current: bool  # True for the device making this request
+
+
+class RevokeOthersResponse(BaseModel):
+    revoked: int

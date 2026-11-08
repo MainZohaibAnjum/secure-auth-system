@@ -19,3 +19,13 @@ export type TwoFactorSetup = {
   otpauth_uri: string;
   qr_code_data_uri: string;
 };
+
+
+export type DeviceSession = {
+  id: string;
+  user_agent: string | null;
+  ip: string | null;
+  signed_in_at: string;
+  last_active_at: string;
+  current: boolean;
+};
