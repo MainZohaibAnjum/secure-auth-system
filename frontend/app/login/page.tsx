@@ -18,6 +18,8 @@ export default function LoginPage() {
   // Set after a correct password when the account has 2FA on
   const [challengeToken, setChallengeToken] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  // Lost phone: type a saved recovery code instead of the app's 6-digit code
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
   // Logged in (just now, or from before)? Go to the dashboard.
   useEffect(() => {
@@ -39,22 +41,29 @@ export default function LoginPage() {
     run(() => verify2fa(challengeToken!, code));
   }
 
+  function toggleRecoveryMode() {
+    setRecoveryMode(!recoveryMode);
+    setCode("");
+  }
+
   if (challengeToken) {
     return (
-      <Card title="Enter your code">
+      <Card title={recoveryMode ? "Use a recovery code" : "Enter your code"}>
         <p className="mb-4 text-sm text-neutral-500">
-          Open your authenticator app and type the 6-digit code for this account.
+          {recoveryMode
+            ? "Type one of the recovery codes you saved when you turned on 2FA. Each code works once."
+            : "Open your authenticator app and type the 6-digit code for this account."}
         </p>
         <ErrorText message={error} />
         <form onSubmit={handleCode}>
           <Field
-            label="6-digit code"
+            label={recoveryMode ? "Recovery code" : "6-digit code"}
             value={code}
             onChange={(e) => setCode(e.target.value.trim())}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="\d{6}"
-            maxLength={6}
+            inputMode={recoveryMode ? "text" : "numeric"}
+            autoComplete={recoveryMode ? "off" : "one-time-code"}
+            pattern={recoveryMode ? undefined : "\\d{6}"}
+            maxLength={recoveryMode ? 32 : 6}
             required
             autoFocus
           />
@@ -64,8 +73,15 @@ export default function LoginPage() {
         </form>
         <button
           type="button"
+          onClick={toggleRecoveryMode}
+          className="mt-4 block text-sm text-blue-600 hover:underline"
+        >
+          {recoveryMode ? "Use the code from my app instead" : "Lost your phone? Use a recovery code"}
+        </button>
+        <button
+          type="button"
           onClick={() => setChallengeToken(null)}
-          className="mt-4 text-sm text-blue-600 hover:underline"
+          className="mt-2 block text-sm text-blue-600 hover:underline"
         >
           ← Back to login
         </button>

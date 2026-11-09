@@ -3,13 +3,14 @@
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
 
+import { RecoveryCodesList } from "@/components/recovery-codes";
 import { Button, ErrorText, Field } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type { TwoFactorSetup, User } from "@/lib/types";
+import type { TwoFactorEnableResult, TwoFactorSetup, User } from "@/lib/types";
 import { useSubmit } from "@/lib/use-submit";
 
-/** Turn 2FA on (setup → scan QR → confirm code) or off (password + code). */
+/** Turn 2FA on (setup → scan QR → confirm code → save recovery codes) or off. */
 export function TwoFactorPanel() {
   const { user, setUser } = useAuth();
   const { error, loading, run } = useSubmit();
@@ -17,6 +18,8 @@ export function TwoFactorPanel() {
   const [setup, setSetup] = useState<TwoFactorSetup | null>(null);
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
+  // Shown once, right after 2FA is turned on
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
 
   if (!user) {
     return null;
@@ -32,7 +35,12 @@ export function TwoFactorPanel() {
   function handleEnable(event: FormEvent) {
     event.preventDefault();
     run(async () => {
-      setUser(await api<User>("/auth/2fa/enable", { method: "POST", body: { code }, auth: true }));
+      const { recovery_codes, ...enabledUser } = await api<TwoFactorEnableResult>(
+        "/auth/2fa/enable",
+        { method: "POST", body: { code }, auth: true },
+      );
+      setUser(enabledUser);
+      setRecoveryCodes(recovery_codes);
       setSetup(null);
       setCode("");
     });
@@ -53,15 +61,17 @@ export function TwoFactorPanel() {
     });
   }
 
-  const codeField = (
+  // Turning 2FA on needs the app's 6-digit code. Turning it off also accepts a
+  // recovery code, so someone who lost their phone can still do it.
+  const codeField = (allowRecoveryCode: boolean) => (
     <Field
-      label="6-digit code from your app"
+      label={allowRecoveryCode ? "6-digit code (or a recovery code)" : "6-digit code from your app"}
       value={code}
       onChange={(e) => setCode(e.target.value.trim())}
-      inputMode="numeric"
+      inputMode={allowRecoveryCode ? "text" : "numeric"}
       autoComplete="one-time-code"
-      pattern="\d{6}"
-      maxLength={6}
+      pattern={allowRecoveryCode ? undefined : "\\d{6}"}
+      maxLength={allowRecoveryCode ? 32 : 6}
       required
     />
   );
@@ -80,7 +90,9 @@ export function TwoFactorPanel() {
 
       <ErrorText message={error} />
 
-      {user.totp_enabled ? (
+      {recoveryCodes ? (
+        <RecoveryCodesList codes={recoveryCodes} onDone={() => setRecoveryCodes(null)} />
+      ) : user.totp_enabled ? (
         <form onSubmit={handleDisable}>
           <Field
             label="Password"
@@ -90,7 +102,7 @@ export function TwoFactorPanel() {
             autoComplete="current-password"
             required
           />
-          {codeField}
+          {codeField(true)}
           <Button type="submit" variant="secondary" loading={loading}>
             Turn off 2FA
           </Button>
@@ -113,7 +125,7 @@ export function TwoFactorPanel() {
             {setup.secret}
           </code>
           <p className="mb-3 text-sm">2. Type the code the app shows:</p>
-          {codeField}
+          {codeField(false)}
           <Button type="submit" loading={loading}>
             Turn on 2FA
           </Button>

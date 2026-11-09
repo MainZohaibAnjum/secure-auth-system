@@ -34,9 +34,10 @@ from app.services.refresh_sessions import (
     revoke_refresh_session,
     rotate_refresh_session,
 )
-from app.services.totp import verify_totp_code
+from app.services.recovery_codes import verify_second_factor
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 # Used when the email doesn't exist, so a wrong email takes as long as a wrong password
 _DUMMY_HASH = hash_password("not-a-real-password")
@@ -124,7 +125,11 @@ def verify_2fa(
     response: Response,
     db: Session = Depends(get_db),
 ) -> LoginResponse:
-    """Second login step: swap the challenge token + a 6-digit code for real tokens."""
+    """Second login step: swap the challenge token + a code for real tokens.
+
+    The code is a 6-digit code from the app, or a recovery code if the phone is lost.
+    """
+
     unauthorized = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired code")
 
     # 1. The challenge token proves the password step passed (in the last few minutes)
@@ -139,7 +144,7 @@ def verify_2fa(
         raise unauthorized
 
     # 2. Wrong codes count toward the same lockout as wrong passwords
-    if not verify_totp_code(user, data.code):
+    if not verify_second_factor(db, user, data.code):
         _record_failed_login(user, now)
         db.commit()
         raise unauthorized

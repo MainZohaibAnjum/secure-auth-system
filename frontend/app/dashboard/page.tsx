@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
+import { RecoveryCodesPanel } from "@/components/recovery-codes";
 import { SessionsPanel } from "@/components/sessions-panel";
 import { TwoFactorPanel } from "@/components/two-factor-panel";
 import { Button, Card, Loading } from "@/components/ui";
@@ -35,7 +35,9 @@ export default function DashboardPage() {
       </dl>
 
       <TwoFactorPanel />
-            <SessionsPanel />
+      <RecoveryCodesPanel />
+      <SessionsPanel />
+
 
 
       <div className="mt-6">

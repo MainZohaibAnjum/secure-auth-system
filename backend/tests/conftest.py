@@ -56,10 +56,12 @@ def test_database():
 
 @pytest.fixture(autouse=True)
 def empty_tables():
-    """Every test starts with no users and no sessions."""
+    """Every test starts with no users, sessions or recovery codes."""
+
     yield
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE users, refresh_sessions"))
+        conn.execute(text("TRUNCATE users, refresh_sessions, recovery_codes"))
+
 
 
 @pytest.fixture(autouse=True)

@@ -29,3 +29,16 @@ export type DeviceSession = {
   last_active_at: string;
   current: boolean;
 };
+
+
+export type TwoFactorEnableResult = User & {
+  recovery_codes: string[];
+};
+
+export type RecoveryCodes = {
+  recovery_codes: string[];
+};
+
+export type RecoveryCodesStatus = {
+  remaining: number;
+};

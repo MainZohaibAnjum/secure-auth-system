@@ -66,14 +66,21 @@ class TwoFactorCodeRequest(BaseModel):
     code: str = Field(pattern=r"^\d{6}$")
 
 
-class TwoFactorVerifyRequest(TwoFactorCodeRequest):
-    """Second login step: the challenge token from /login plus the 6-digit code."""
+class SecondFactorRequest(BaseModel):
+    """A 6-digit code from the authenticator app, OR a recovery code."""
+
+    code: str = Field(min_length=6, max_length=32)
+
+
+class TwoFactorVerifyRequest(SecondFactorRequest):
+    """Second login step: the challenge token from /login plus a code."""
 
     challenge_token: str
 
 
-class TwoFactorDisableRequest(TwoFactorCodeRequest):
-    """Turning 2FA off needs both the password and a current code."""
+class TwoFactorDisableRequest(SecondFactorRequest):
+    """Turning 2FA off needs both the password and a code (a recovery code works too)."""
+
 
     password: str = Field(min_length=1, max_length=128)
 
@@ -99,3 +106,23 @@ class SessionResponse(BaseModel):
 
 class RevokeOthersResponse(BaseModel):
     revoked: int
+
+
+
+
+class TwoFactorEnableResponse(UserResponse):
+    """2FA is now on. The recovery codes are shown this one time only."""
+
+    recovery_codes: list[str]
+
+
+class RecoveryCodesRegenerateRequest(TwoFactorDisableRequest):
+    """Same proof as turning 2FA off: the password and a code."""
+
+
+class RecoveryCodesResponse(BaseModel):
+    recovery_codes: list[str]
+
+
+class RecoveryCodesStatusResponse(BaseModel):
+    remaining: int

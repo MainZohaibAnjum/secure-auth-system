@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     totp_encryption_key: str
     totp_issuer_name: str
     two_fa_challenge_expire_minutes: int
+    recovery_code_count: int
+
 
     # Rate limiting (max requests per IP address)
     rate_limit_storage_uri: str

@@ -97,6 +97,7 @@ COOKIE_SECURE=false
 TOTP_ENCRYPTION_KEY=<generate, see below>
 TOTP_ISSUER_NAME=SecureAuth
 TWO_FA_CHALLENGE_EXPIRE_MINUTES=5
+RECOVERY_CODE_COUNT=10
 
 # Rate limiting (per IP address)
 RATE_LIMIT_STORAGE_URI=memory://
@@ -160,13 +161,18 @@ The suite creates the `TEST_DATABASE_NAME` database, runs the Alembic migrations
 |---|---|---|---|
 | POST | `/auth/signup` | – | Create an account |
 | POST | `/auth/login` | – | Password step; returns an access token, or a 2FA challenge token |
-| POST | `/auth/2fa/verify` | challenge token | Second login step with a 6-digit code |
+| POST | `/auth/2fa/verify` | challenge token | Second login step with a 6-digit code or a recovery code |
 | POST | `/auth/refresh` | refresh cookie | New access token; rotates the refresh cookie |
 | POST | `/auth/logout` | refresh cookie | Revoke this session and clear the cookie |
 | GET | `/auth/me` | access token | The logged-in user |
 | POST | `/auth/2fa/setup` | access token | New TOTP secret and QR code |
-| POST | `/auth/2fa/enable` | access token | Confirm a code to switch 2FA on |
-| POST | `/auth/2fa/disable` | access token | Password + code to switch 2FA off |
+| POST | `/auth/2fa/enable` | access token | Confirm a code to switch 2FA on; returns recovery codes (shown once) |
+| POST | `/auth/2fa/disable` | access token | Password + code (or recovery code) to switch 2FA off |
+| GET | `/auth/2fa/recovery-codes` | access token | How many unused recovery codes are left |
+| POST | `/auth/2fa/recovery-codes` | access token | Password + code; replaces all recovery codes |
+| GET | `/auth/sessions` | access token | List logged-in devices |
+| POST | `/auth/sessions/{id}/revoke` | access token | Log out one device |
+| POST | `/auth/sessions/revoke-others` | access token | Log out all other devices |
 
 ## How login works
 
