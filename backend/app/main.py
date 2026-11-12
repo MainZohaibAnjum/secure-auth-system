@@ -4,7 +4,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
-from app.routers import admin, auth, sessions, two_factor
+from app.routers import admin, auth, products, sessions, two_factor
 
 
 app = FastAPI(title="Secure Auth API")
@@ -19,7 +19,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type"],
 )
 
@@ -32,5 +32,7 @@ app.include_router(auth.router)
 app.include_router(two_factor.router)
 app.include_router(sessions.router)
 app.include_router(admin.router)
+app.include_router(products.router)
+
 
 

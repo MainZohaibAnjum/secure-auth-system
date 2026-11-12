@@ -1,4 +1,10 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  TextareaHTMLAttributes,
+} from "react";
+
 
 /** A centered box with a title, used by every page. */
 export function Card({ title, children }: { title: string; children: ReactNode }) {
@@ -8,6 +14,16 @@ export function Card({ title, children }: { title: string; children: ReactNode }
         <h1 className="mb-6 text-2xl font-semibold">{title}</h1>
         {children}
       </div>
+    </main>
+  );
+}
+
+/** A wider page with a title, for lists like the shop. */
+export function Page({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <main className="mx-auto w-full max-w-4xl flex-1 p-4 sm:p-8">
+      <h1 className="mb-6 text-2xl font-semibold">{title}</h1>
+      {children}
     </main>
   );
 }
@@ -25,6 +41,21 @@ export function Field({ label, ...props }: { label: string } & InputHTMLAttribut
   );
 }
 
+/** A labelled text box with several lines. */
+export function TextArea({
+  label,
+  ...props
+}: { label: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <label className="mb-4 block text-sm">
+      <span className="mb-1 block font-medium">{label}</span>
+      <textarea
+        {...props}
+        className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-blue-600 dark:border-neutral-700"
+      />
+    </label>
+  );
+}
 type ButtonProps = {
   loading?: boolean;
   variant?: "primary" | "secondary";

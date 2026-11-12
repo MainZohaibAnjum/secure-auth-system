@@ -51,3 +51,17 @@ export type AdminUser = User & {
   is_active: boolean;
 };
 
+
+export type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price_cents: number;
+  stock: number;
+  image_url: string | null;
+  is_active: boolean;
+  created_at: string;
+};
+
+// What the admin form sends to add or change a product
+export type ProductInput = Omit<Product, "id" | "created_at">;

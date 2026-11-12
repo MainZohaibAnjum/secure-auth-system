@@ -43,6 +43,11 @@ export default function AdminPage() {
 
   return (
     <Card title="All users">
+      {isAdmin && (
+        <Link href="/admin/products" className="mb-4 block text-sm text-blue-600 hover:underline">
+          Manage products →
+        </Link>
+      )}
       {!isAdmin ? (
         <ErrorText message="Admins only." />
       ) : (

@@ -39,6 +39,9 @@ export default function DashboardPage() {
           <dd className="font-medium">{new Date(user.created_at).toLocaleDateString()}</dd>
         </div>
       </dl>
+      <Link href="/shop" className="mb-2 block text-sm text-blue-600 hover:underline">
+        Go to the shop →
+      </Link>
 
       {/* Only a shortcut: the server itself refuses /admin requests from non-admins */}
       {user.role === "admin" && (

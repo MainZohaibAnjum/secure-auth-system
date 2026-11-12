@@ -1,17 +1,6 @@
 """Roles: normal users and admins."""
-import pytest
-
 from app.make_admin import main as make_admin
 
-
-@pytest.fixture
-def admin_headers(client):
-    """Authorization header for a second user who has been made an admin."""
-    admin = {"email": "boss@example.com", "password": "admin-long-password-1"}
-    assert client.post("/auth/signup", json=admin).status_code == 201
-    assert make_admin([admin["email"]]) == 0
-    token = client.post("/auth/login", json=admin).json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
 
 
 def test_new_users_are_normal_users(client, auth_headers):

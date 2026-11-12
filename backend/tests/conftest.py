@@ -27,6 +27,7 @@ from sqlalchemy import create_engine, text  # noqa: E402
 from app.core.config import settings  # noqa: E402
 from app.core.rate_limit import limiter  # noqa: E402
 from app.db.session import engine  # noqa: E402
+from app.make_admin import main as make_admin  # noqa: E402
 from app.main import app  # noqa: E402
 
 PASSWORD = "correct-horse-battery-staple"
@@ -56,11 +57,13 @@ def test_database():
 
 @pytest.fixture(autouse=True)
 def empty_tables():
-    """Every test starts with no users, sessions or recovery codes."""
+    """Every test starts with empty tables."""
+
 
     yield
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE users, refresh_sessions, recovery_codes"))
+        conn.execute(text("TRUNCATE users, refresh_sessions, recovery_codes, products"))
+
 
 
 
@@ -88,4 +91,15 @@ def user(client):
 def auth_headers(client, user):
     """Authorization header for the logged-in user."""
     token = client.post("/auth/login", json=user).json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+
+@pytest.fixture
+def admin_headers(client):
+    """Authorization header for a second user who has been made an admin."""
+    admin = {"email": "boss@example.com", "password": "admin-long-password-1"}
+    assert client.post("/auth/signup", json=admin).status_code == 201
+    assert make_admin([admin["email"]]) == 0
+    token = client.post("/auth/login", json=admin).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

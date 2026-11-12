@@ -19,6 +19,7 @@ Signup and login with Argon2 password hashing, JWT access tokens, rotating refre
 | Recovery codes | One-time backup codes for 2FA, stored as SHA-256 hashes, shown only once |
 | Devices | List every logged-in device; log out one device or all others |
 | Roles | `user` or `admin`; admin routes return 403 to normal users; admins are made only by a server command |
+| Products | Public shop pages; admins add, edit, hide and delete products; prices stored as whole cents; the database refuses negative prices or stock |
 | Frontend | Access token kept in memory only; silent refresh on page load and on expiry |
 
 ## Repository layout
@@ -145,6 +146,8 @@ Create `frontend/.env.local`:
 
 ```ini
 NEXT_PUBLIC_API_URL=http://localhost:8000
+# Currency code for showing prices (USD, EUR, GBP, PKR, ...)
+NEXT_PUBLIC_CURRENCY=USD
 ```
 
 Then:
@@ -185,6 +188,12 @@ The suite creates the `TEST_DATABASE_NAME` database, runs the Alembic migrations
 | POST | `/auth/sessions/{id}/revoke` | access token | Log out one device |
 | POST | `/auth/sessions/revoke-others` | access token | Log out all other devices |
 | GET | `/admin/users` | access token (admin) | Every account (403 for normal users) |
+| GET | `/products` | – | Every product for sale (hidden ones left out) |
+| GET | `/products/{id}` | – | One product (404 if hidden) |
+| GET | `/admin/products` | access token (admin) | Every product, hidden ones too |
+| POST | `/admin/products` | access token (admin) | Add a product |
+| PATCH | `/admin/products/{id}` | access token (admin) | Change some fields of a product |
+| DELETE | `/admin/products/{id}` | access token (admin) | Delete a product |
 
 
 ## How login works
