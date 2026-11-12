@@ -1,11 +1,15 @@
 // The shapes of the JSON our FastAPI backend sends back
 
+export type Role = "user" | "admin";
+
 export type User = {
   id: string;
   email: string;
+  role: Role;
   totp_enabled: boolean;
   created_at: string;
 };
+
 
 export type LoginResponse = {
   access_token: string | null;
@@ -42,3 +46,8 @@ export type RecoveryCodes = {
 export type RecoveryCodesStatus = {
   remaining: number;
 };
+
+export type AdminUser = User & {
+  is_active: boolean;
+};
+

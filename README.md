@@ -16,6 +16,9 @@ Signup and login with Argon2 password hashing, JWT access tokens, rotating refre
 | Account lockout | Locks an account for a period after repeated wrong passwords or 2FA codes |
 | Two-factor auth | TOTP (authenticator apps), secret encrypted at rest with Fernet, QR code setup, single-use codes |
 | Rate limiting | Per-IP limits on login, signup, 2FA verify/disable and refresh (HTTP 429) |
+| Recovery codes | One-time backup codes for 2FA, stored as SHA-256 hashes, shown only once |
+| Devices | List every logged-in device; log out one device or all others |
+| Roles | `user` or `admin`; admin routes return 403 to normal users; admins are made only by a server command |
 | Frontend | Access token kept in memory only; silent refresh on page load and on expiry |
 
 ## Repository layout
@@ -128,6 +131,14 @@ uvicorn app.main:app --reload
 
 The API runs at http://localhost:8000, with interactive docs at http://localhost:8000/docs.
 
+To make an account an admin (after signing up), run this in `backend`:
+
+```bash
+python -m app.make_admin you@example.com           # make admin
+python -m app.make_admin you@example.com --remove  # back to a normal user
+```
+
+
 ### 3. Frontend
 
 Create `frontend/.env.local`:
@@ -173,6 +184,8 @@ The suite creates the `TEST_DATABASE_NAME` database, runs the Alembic migrations
 | GET | `/auth/sessions` | access token | List logged-in devices |
 | POST | `/auth/sessions/{id}/revoke` | access token | Log out one device |
 | POST | `/auth/sessions/revoke-others` | access token | Log out all other devices |
+| GET | `/admin/users` | access token (admin) | Every account (403 for normal users) |
+
 
 ## How login works
 

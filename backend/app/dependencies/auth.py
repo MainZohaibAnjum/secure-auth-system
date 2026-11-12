@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
 from app.db.session import get_db
-from app.models import User
+from app.models import Role, User
 
 # Reads the "Authorization: Bearer <token>" header from each request
 _bearer = HTTPBearer(auto_error=False)
@@ -41,3 +41,13 @@ def get_current_user(
         raise unauthorized
 
     return user
+
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Guard for admin-only routes: 401 if not logged in, 403 if logged in but not an admin."""
+    # The role is read from the database on every request (not stored in the token),
+    # so making someone admin, or taking it away, works straight away
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admins only")
+    return current_user

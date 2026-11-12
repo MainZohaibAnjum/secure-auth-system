@@ -4,7 +4,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
-from app.routers import auth, sessions, two_factor
+from app.routers import admin, auth, sessions, two_factor
 
 
 app = FastAPI(title="Secure Auth API")
@@ -31,4 +31,6 @@ def health() -> dict[str, str]:
 app.include_router(auth.router)
 app.include_router(two_factor.router)
 app.include_router(sessions.router)
+app.include_router(admin.router)
+
 

@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from app.models import Role
 
 
 class SignupRequest(BaseModel):
@@ -24,6 +25,7 @@ class UserResponse(BaseModel):
 
     id: uuid.UUID
     email: EmailStr
+    role: Role
     totp_enabled: bool
     created_at: datetime
 

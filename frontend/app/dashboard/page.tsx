@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+
 import { RecoveryCodesPanel } from "@/components/recovery-codes";
 import { SessionsPanel } from "@/components/sessions-panel";
 import { TwoFactorPanel } from "@/components/two-factor-panel";
@@ -29,16 +31,25 @@ export default function DashboardPage() {
           <dd className="font-medium">{user.email}</dd>
         </div>
         <div>
+          <dt className="text-neutral-500">Role</dt>
+          <dd className="font-medium">{user.role === "admin" ? "Admin" : "User"}</dd>
+        </div>
+        <div>
           <dt className="text-neutral-500">Member since</dt>
           <dd className="font-medium">{new Date(user.created_at).toLocaleDateString()}</dd>
         </div>
       </dl>
 
+      {/* Only a shortcut: the server itself refuses /admin requests from non-admins */}
+      {user.role === "admin" && (
+        <Link href="/admin" className="mb-6 block text-sm text-blue-600 hover:underline">
+          Admin: see all users →
+        </Link>
+      )}
+
       <TwoFactorPanel />
       <RecoveryCodesPanel />
       <SessionsPanel />
-
-
 
       <div className="mt-6">
         <Button variant="secondary" onClick={() => logout()}>

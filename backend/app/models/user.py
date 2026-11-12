@@ -1,3 +1,4 @@
+import enum
 import uuid
 from datetime import datetime
 
@@ -5,6 +6,13 @@ from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+
+
+class Role(str, enum.Enum):
+    """What a user is allowed to do."""
+
+    USER = "user"  # a normal customer
+    ADMIN = "admin"  # can manage the shop and see all users
 
 
 class User(Base):
@@ -15,6 +23,11 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(default=True)
+
+    # Permissions. Everyone starts as a normal user; only the make_admin command changes it.
+    role: Mapped[str] = mapped_column(
+        String(20), default=Role.USER.value, server_default=Role.USER.value
+    )
 
     # Two-factor authentication (2FA)
     totp_secret_encrypted: Mapped[str | None] = mapped_column(String(255))
