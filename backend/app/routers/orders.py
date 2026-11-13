@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models import CartItem, Order, OrderItem, OrderStatus, Product, User
 from app.schemas.order import OrderResponse
+from app.services.orders import change_status
 
 # Every route needs a login, and users only ever see their own orders
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -81,6 +82,19 @@ def list_my_orders(
 def get_my_order(
     order_id: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> Order:
+    return _get_my_order_or_404(db, user, order_id)
+
+
+@router.post("/{order_id}/cancel", response_model=OrderResponse)
+def cancel_my_order(
+    order_id: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> Order:
+    """Customers can cancel their own order until it has been shipped."""
+    order = _get_my_order_or_404(db, user, order_id)
+    return change_status(db, order, OrderStatus.CANCELLED)
+
+
+def _get_my_order_or_404(db: Session, user: User, order_id: uuid.UUID) -> Order:
     order = db.get(Order, order_id)
     # Someone else's order looks exactly like one that doesn't exist
     if order is None or order.user_id != user.id:

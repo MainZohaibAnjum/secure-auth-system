@@ -88,10 +88,18 @@ export type OrderItem = {
   line_total_cents: number;
 };
 
+// paid -> shipped -> delivered, or paid -> cancelled
+export type OrderStatus = "paid" | "shipped" | "delivered" | "cancelled";
+
 export type Order = {
   id: string;
-  status: "paid";
+  status: OrderStatus;
   total_cents: number;
   created_at: string;
   items: OrderItem[];
+};
+
+// What an admin sees: the order, plus who placed it
+export type AdminOrder = Order & {
+  user_email: string;
 };

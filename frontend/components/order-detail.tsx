@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { ErrorText, Loading, Page } from "@/components/ui";
+import { StatusBadge } from "@/components/order-status";
+import { Button, ErrorText, Loading, Page } from "@/components/ui";
 import { api, messageFrom } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice } from "@/lib/money";
 import type { Order } from "@/lib/types";
+import { useSubmit } from "@/lib/use-submit";
 
 /** One of the user's orders: what they bought and what they paid. */
 export function OrderDetail() {
@@ -19,6 +21,7 @@ export function OrderDetail() {
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const cancel = useSubmit();
 
   // Not logged in? Go to the login page.
   useEffect(() => {
@@ -44,13 +47,21 @@ export function OrderDetail() {
     return <Loading />;
   }
 
+  function cancelOrder() {
+    if (!window.confirm("Cancel this order?")) return;
+    cancel.run(async () => {
+      const url = `/orders/${encodeURIComponent(id)}/cancel`;
+      setOrder(await api<Order>(url, { method: "POST", auth: true }));
+    });
+  }
+
   return (
     <Page title="Order">
       <ErrorText message={error} />
 
       {order ? (
         <>
-          {isNew && (
+          {isNew && order.status === "paid" && (
             <p className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
               Thank you! Your order has been placed.
             </p>
@@ -58,7 +69,7 @@ export function OrderDetail() {
 
           <p className="mb-4 text-sm text-neutral-500">
             Order {order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString()} ·{" "}
-            <span className="font-medium text-green-600">Paid</span>
+            <StatusBadge status={order.status} />
           </p>
 
           <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -86,6 +97,16 @@ export function OrderDetail() {
             <span>Total</span>
             <span>{formatPrice(order.total_cents)}</span>
           </div>
+
+          {/* Only until it ships: after that the server says no anyway */}
+          {order.status === "paid" && (
+            <div className="mt-4 sm:ml-auto sm:w-64">
+              <ErrorText message={cancel.error} />
+              <Button variant="secondary" loading={cancel.loading} onClick={cancelOrder}>
+                Cancel order
+              </Button>
+            </div>
+          )}
         </>
       ) : (
         !error && <p className="text-sm text-neutral-500">Loading…</p>

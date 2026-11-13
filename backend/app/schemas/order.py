@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.models.order import OrderStatus
+
 
 class OrderItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -22,3 +24,15 @@ class OrderResponse(BaseModel):
     total_cents: int
     created_at: datetime
     items: list[OrderItemResponse]
+
+
+class AdminOrderResponse(OrderResponse):
+    """What an admin sees: the order, plus who placed it."""
+
+    user_email: str
+
+
+class OrderStatusUpdate(BaseModel):
+    """What an admin sends to move an order on, e.g. {"status": "shipped"}."""
+
+    status: OrderStatus

@@ -22,6 +22,7 @@ Signup and login with Argon2 password hashing, JWT access tokens, rotating refre
 | Products | Public shop pages; admins add, edit, hide and delete products; prices stored as whole cents; the database refuses negative prices or stock |
 | Cart | Each user's own cart, saved in the database; stock checked when adding; totals worked out on the server from current prices |
 | Checkout & orders | All-or-nothing checkout; stock lowered in one atomic database step so the last item can't be sold twice; orders keep the name and price from checkout time; users see only their own orders; payment is pretend for now |
+| Order management | Admins see all orders and move them `paid` → `shipped` → `delivered`; orders only move forward; cancelling (by admin, or by the customer before shipping) puts items back in stock, and a status check inside the UPDATE stops two cancels from restocking twice |
 | Frontend | Access token kept in memory only; silent refresh on page load and on expiry |
 
 ## Repository layout
@@ -204,6 +205,9 @@ The suite creates the `TEST_DATABASE_NAME` database, runs the Alembic migrations
 | POST | `/orders` | access token | Check out: turn the cart into a paid order |
 | GET | `/orders` | access token | Your orders, newest first |
 | GET | `/orders/{id}` | access token | One of your orders (404 for someone else's) |
+| POST | `/orders/{id}/cancel` | access token | Cancel your own order while it's still `paid`; items go back in stock |
+| GET | `/admin/orders` | access token (admin) | Every customer's orders, newest first; `?status=paid` to filter |
+| PATCH | `/admin/orders/{id}` | access token (admin) | Move an order on: `paid` → `shipped` → `delivered`, or `paid` → `cancelled` |
 
 
 ## How login works

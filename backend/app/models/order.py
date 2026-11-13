@@ -6,25 +6,47 @@ from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.user import User
 
 
 class OrderStatus(str, enum.Enum):
-    """Where an order is. Payment is pretend for now, so every new order is paid."""
+    """Where an order is. Payment is pretend for now, so every new order starts as paid."""
 
     PAID = "paid"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
+
+
+# The only moves allowed. An order only ever goes forward:
+#   paid -> shipped -> delivered,   or   paid -> cancelled
+# Delivered and cancelled are final: nothing can come after them.
+NEXT_STATUSES: dict[OrderStatus, set[OrderStatus]] = {
+    OrderStatus.PAID: {OrderStatus.SHIPPED, OrderStatus.CANCELLED},
+    OrderStatus.SHIPPED: {OrderStatus.DELIVERED},
+    OrderStatus.DELIVERED: set(),
+    OrderStatus.CANCELLED: set(),
+}
 
 
 class Order(Base):
     """One finished checkout: what a user bought, and what they paid."""
 
     __tablename__ = "orders"
-    __table_args__ = (CheckConstraint("total_cents >= 0", name="total_not_negative"),)
+    __table_args__ = (
+        CheckConstraint("total_cents >= 0", name="total_not_negative"),
+        # The database itself refuses any status that isn't one of ours
+        CheckConstraint(
+            "status IN ('paid', 'shipped', 'delivered', 'cancelled')", name="status_known"
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     status: Mapped[str] = mapped_column(String(20))
     total_cents: Mapped[int]
 
+    user: Mapped[User] = relationship(lazy="joined")  # who placed it (for the admin list)
     items: Mapped[list["OrderItem"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan", order_by="OrderItem.product_name"
     )
@@ -32,6 +54,10 @@ class Order(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+    @property
+    def user_email(self) -> str:
+        return self.user.email
 
 
 class OrderItem(Base):

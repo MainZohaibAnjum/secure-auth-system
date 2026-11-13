@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { StatusBadge } from "@/components/order-status";
 import { ErrorText, Loading, Page } from "@/components/ui";
 import { api, messageFrom } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -65,7 +66,10 @@ export default function OrdersPage() {
                       {count} {count === 1 ? "item" : "items"} · Order {order.id.slice(0, 8)}
                     </p>
                   </div>
-                  <p className="font-medium">{formatPrice(order.total_cents)}</p>
+                  <div className="text-right">
+                    <p className="font-medium">{formatPrice(order.total_cents)}</p>
+                    <StatusBadge status={order.status} />
+                  </div>
                 </Link>
               </li>
             );
