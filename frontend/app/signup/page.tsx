@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
-import { Button, Card, ErrorText, Field } from "@/components/ui";
+import { AuthShell, CustomerTabs } from "@/components/auth-shell";
+import { Button, ErrorText, Field } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { useSubmit } from "@/lib/use-submit";
 
@@ -33,7 +34,8 @@ export default function SignupPage() {
   }
 
   return (
-    <Card title="Create account">
+    <AuthShell>
+      <CustomerTabs active="register" />
       <ErrorText message={error} />
       <form onSubmit={handleSubmit}>
         <Field
@@ -63,15 +65,15 @@ export default function SignupPage() {
           required
         />
         <Button type="submit" loading={loading}>
-          Sign up
+          Create my account
         </Button>
       </form>
-      <p className="mt-4 text-sm text-neutral-500">
+      <p className="mt-4 text-center text-sm text-neutral-500">
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 hover:underline">
+        <Link href="/login" className="font-medium text-blue-600 hover:underline">
           Log in
         </Link>
       </p>
-    </Card>
+    </AuthShell>
   );
 }

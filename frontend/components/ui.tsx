@@ -5,12 +5,15 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
+import { StoreLogo } from "@/components/store-logo";
 
-/** A centered box with a title, used by every page. */
+
+/** A centered box with a title and the shop's name above it (login, register, ...). */
 export function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <main className="flex flex-1 items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-neutral-200 p-6 shadow-sm dark:border-neutral-800">
+    <main className="flex flex-1 flex-col items-center justify-center gap-6 bg-neutral-50 p-4 dark:bg-neutral-950">
+      <StoreLogo />
+      <div className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <h1 className="mb-6 text-2xl font-semibold">{title}</h1>
         {children}
       </div>

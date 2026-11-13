@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AuthProvider } from "@/lib/auth-context";
+import { STORE_NAME } from "@/lib/store";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Secure Auth",
-  description: "Login with Argon2, JWT, refresh tokens and 2FA",
+  title: STORE_NAME,
+  description: `${STORE_NAME}: good things at sasta prices`,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

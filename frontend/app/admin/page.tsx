@@ -19,7 +19,7 @@ export default function AdminPage() {
 
   // Not logged in? Go to the login page.
   useEffect(() => {
-    if (status === "anonymous") router.replace("/login");
+    if (status === "anonymous") router.replace("/admin/login");
   }, [status, router]);
 
   useEffect(() => {

@@ -151,6 +151,8 @@ Create `frontend/.env.local`:
 NEXT_PUBLIC_API_URL=http://localhost:8000
 # Currency code for showing prices (USD, EUR, GBP, PKR, ...)
 NEXT_PUBLIC_CURRENCY=USD
+# The shop name shown in the header, home page and browser tab
+NEXT_PUBLIC_STORE_NAME=Sasta Online Store
 ```
 
 Then:

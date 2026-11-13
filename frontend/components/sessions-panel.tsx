@@ -45,7 +45,7 @@ export function SessionsPanel() {
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="mb-1 font-semibold">Your devices</h2>
       <p className="mb-3 text-sm text-neutral-500">Where your account is logged in right now.</p>
 
