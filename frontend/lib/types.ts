@@ -77,3 +77,21 @@ export type Cart = {
   items: CartLine[];
   total_cents: number;
 };
+
+// An order keeps the name and price from the moment of checkout,
+// so it never changes when the admin edits or deletes the product later.
+export type OrderItem = {
+  product_id: string | null; // null if the product was deleted
+  product_name: string;
+  unit_price_cents: number;
+  quantity: number;
+  line_total_cents: number;
+};
+
+export type Order = {
+  id: string;
+  status: "paid";
+  total_cents: number;
+  created_at: string;
+  items: OrderItem[];
+};

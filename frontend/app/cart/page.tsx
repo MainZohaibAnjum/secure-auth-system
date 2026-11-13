@@ -9,7 +9,7 @@ import { Button, ErrorText, Loading, Page } from "@/components/ui";
 import { api, messageFrom } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice } from "@/lib/money";
-import type { Cart } from "@/lib/types";
+import type { Cart, Order } from "@/lib/types";
 
 const smallButton =
   "rounded-lg border border-neutral-300 px-2 py-1 text-sm hover:bg-neutral-100 disabled:opacity-40 dark:border-neutral-700 dark:hover:bg-neutral-900";
@@ -52,6 +52,24 @@ export default function CartPage() {
       setError(messageFrom(err));
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** Turn the cart into an order, then show that order. */
+  async function placeOrder() {
+    setError(null);
+    setBusy(true);
+    try {
+      const order = await api<Order>("/orders", { method: "POST", auth: true });
+      // Stay "busy" while the next page opens, so the button can't be clicked twice
+      router.push(`/orders/${order.id}?new=1`);
+    } catch (err) {
+      setError(messageFrom(err));
+      // Stock or products may have changed, so show the cart as it is now
+      api<Cart>("/cart", { auth: true })
+        .then(setCart)
+        .catch(() => {})
+        .finally(() => setBusy(false));
     }
   }
 
@@ -125,9 +143,13 @@ export default function CartPage() {
             <span>{formatPrice(cart.total_cents)}</span>
           </div>
 
-          {/* Checkout is the next step (orders); for now the button is switched off */}
           <div className="mt-4 sm:ml-auto sm:w-64">
-            <Button disabled>Checkout (coming soon)</Button>
+            <Button loading={busy} onClick={placeOrder}>
+              Place order
+            </Button>
+            <p className="mt-2 text-center text-xs text-neutral-500">
+              Test shop: no real payment is taken.
+            </p>
           </div>
         </>
       )}

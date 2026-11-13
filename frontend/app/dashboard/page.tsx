@@ -45,6 +45,9 @@ export default function DashboardPage() {
       <Link href="/cart" className="mb-2 block text-sm text-blue-600 hover:underline">
         My cart →
       </Link>
+      <Link href="/orders" className="mb-2 block text-sm text-blue-600 hover:underline">
+        My orders →
+      </Link>
 
       {/* Only a shortcut: the server itself refuses /admin requests from non-admins */}
       {user.role === "admin" && (

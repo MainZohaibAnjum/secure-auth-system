@@ -20,6 +20,8 @@ Signup and login with Argon2 password hashing, JWT access tokens, rotating refre
 | Devices | List every logged-in device; log out one device or all others |
 | Roles | `user` or `admin`; admin routes return 403 to normal users; admins are made only by a server command |
 | Products | Public shop pages; admins add, edit, hide and delete products; prices stored as whole cents; the database refuses negative prices or stock |
+| Cart | Each user's own cart, saved in the database; stock checked when adding; totals worked out on the server from current prices |
+| Checkout & orders | All-or-nothing checkout; stock lowered in one atomic database step so the last item can't be sold twice; orders keep the name and price from checkout time; users see only their own orders; payment is pretend for now |
 | Frontend | Access token kept in memory only; silent refresh on page load and on expiry |
 
 ## Repository layout
@@ -194,6 +196,14 @@ The suite creates the `TEST_DATABASE_NAME` database, runs the Alembic migrations
 | POST | `/admin/products` | access token (admin) | Add a product |
 | PATCH | `/admin/products/{id}` | access token (admin) | Change some fields of a product |
 | DELETE | `/admin/products/{id}` | access token (admin) | Delete a product |
+| GET | `/cart` | access token | Your cart with line totals and the total |
+| POST | `/cart/items` | access token | Add a product (adds to the quantity if it's already there) |
+| PATCH | `/cart/items/{product_id}` | access token | Set the quantity of one product |
+| DELETE | `/cart/items/{product_id}` | access token | Remove one product from the cart |
+| DELETE | `/cart` | access token | Empty the cart |
+| POST | `/orders` | access token | Check out: turn the cart into a paid order |
+| GET | `/orders` | access token | Your orders, newest first |
+| GET | `/orders/{id}` | access token | One of your orders (404 for someone else's) |
 
 
 ## How login works
