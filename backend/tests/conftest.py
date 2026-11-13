@@ -62,7 +62,7 @@ def empty_tables():
 
     yield
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE users, refresh_sessions, recovery_codes, products"))
+         conn.execute(text("TRUNCATE users, refresh_sessions, recovery_codes, products, cart_items"))
 
 
 

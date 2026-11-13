@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AddToCart } from "@/components/add-to-cart";
 import { ProductImage } from "@/components/product-image";
 import { ErrorText, Page } from "@/components/ui";
 import { api, messageFrom } from "@/lib/api";
@@ -49,6 +50,9 @@ export function ProductDetail() {
             <p className="whitespace-pre-line text-sm text-neutral-600 dark:text-neutral-400">
               {product.description}
             </p>
+            <div className="mt-6">
+              <AddToCart product={product} />
+            </div>
           </div>
         </div>
       ) : (

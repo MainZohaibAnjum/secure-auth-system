@@ -65,3 +65,15 @@ export type Product = {
 
 // What the admin form sends to add or change a product
 export type ProductInput = Omit<Product, "id" | "created_at">;
+
+// One line in the cart. The server works out every amount from current prices.
+export type CartLine = {
+  product: Product;
+  quantity: number;
+  line_total_cents: number;
+};
+
+export type Cart = {
+  items: CartLine[];
+  total_cents: number;
+};

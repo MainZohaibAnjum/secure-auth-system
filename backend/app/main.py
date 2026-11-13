@@ -4,7 +4,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
-from app.routers import admin, auth, products, sessions, two_factor
+from app.routers import admin, auth, cart, products, sessions, two_factor
 
 
 app = FastAPI(title="Secure Auth API")
@@ -33,6 +33,8 @@ app.include_router(two_factor.router)
 app.include_router(sessions.router)
 app.include_router(admin.router)
 app.include_router(products.router)
+app.include_router(cart.router)
+
 
 
 

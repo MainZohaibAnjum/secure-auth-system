@@ -56,9 +56,14 @@ export default function ShopPage() {
         </ul>
       )}
 
-      <Link href="/dashboard" className="mt-6 inline-block text-sm text-blue-600 hover:underline">
-        ← My account
-      </Link>
+      <div className="mt-6 flex gap-6 text-sm">
+        <Link href="/dashboard" className="text-blue-600 hover:underline">
+          ← My account
+        </Link>
+        <Link href="/cart" className="text-blue-600 hover:underline">
+          My cart →
+        </Link>
+      </div>
     </Page>
   );
 }
